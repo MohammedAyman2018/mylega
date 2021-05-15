@@ -1,0 +1,114 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: 'Changa', sans-serif;
+}
+* {
+  color: #94a1b2;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #fffffe;
+}
+.text-tertiary {
+  color: #2cb67d !important;
+}
+select, button {
+  border: 0;
+  cursor: pointer;
+  height: 3rem;
+  -webkit-box-flex: 1;
+  flex: 1;
+  border-radius: 3px;
+  font-weight: 700;
+  padding: 0.5rem;
+  background-color: #7f5af0;
+  color: #fffffe;
+}
+button.danger-button {
+  background-color: #b62c3e;
+}
+button:disabled {
+  background-color: #000;
+  cursor: not-allowed;
+}
+select {
+  -webkit-appearance: none;
+}
+select option:disabled {
+  color: #2cb67d;
+}
+select option {
+  color: #fffffe;
+}
+table {
+  width: 100%;
+  margin: 20px 0;
+}
+table tr {
+  transition: all 0.4s ease;
+}
+table tr:hover {
+  background-color: #7f5af0;
+}
+table tr:hover td, table tr:hover th {
+  color: #fffffe;
+}
+td, th {
+  border-left: 1px solid #7f5af0;
+  border-bottom: 1px solid #7f5af0;
+  padding: 2px;
+}
+button.expanded {
+  width: 100%;
+}
+.margin-top {
+  margin-top: 10px;
+}
+#app {
+  min-height: 100vh;
+  padding: 10px;
+  padding-bottom: 40px;
+  background-color: #16161a;
+  text-align: center;
+}
+.current-game {
+  margin: 0 0 60px 0;
+  text-align: start;
+}
+.current-game > * {
+  text-align: center;
+}
+.current-game .goal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+.current-game .goal select, .current-game .goal button:nth-of-type(1) {
+  margin-left: 10px;
+}
+.add-player div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.add-player div input {
+  flex: 1;
+  padding: 10px;
+  margin-left: 10px;
+  border-radius: 3px;
+  border: 0;
+}
+.flex-between {
+  display: flex;
+  justify-content: flex-start;
+}
+.match {
+  margin-bottom: 20px;
+}
+.match p {
+  flex: 1;
+  padding: 10px;
+  border-left: 1px solid #010101;
+  border-bottom: 1px solid #010101;
+}

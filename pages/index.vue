@@ -1,91 +1,178 @@
 <template>
-  <div class="container">
-    <div>
-      <Logo />
-      <h1 class="title">
-        nuxt-express
-      </h1>
-      <div>
-        {{ test }}
-        <div class="links">
-          <a
-            href="/users"
-            class="button--green"
-          >
-            Users List
-          </a>
-        </div>
+  <div id="app">
+    <h1>FIFA 21</h1>
+    <section v-if="currentGame.length === 0" class="current-game">
+      <h2 class="text-tertiary">
+        مباراة جديدة
+      </h2>
+
+      <div class="goal">
+        <select id="player1" v-model="player1" name="player1">
+          <option v-for="(theplayer, idx) in players" :key="theplayer._id" :value="idx">
+            {{ theplayer.name }}
+          </option>
+        </select>
+
+        <select id="player2" v-model="player2" name="player2">
+          <option v-for="(theplayer2, idx) in players" :key="theplayer2._id" :value="idx">
+            {{ theplayer2.name }}
+          </option>
+        </select>
+
+        <button :disabled="player1 === player2" @click="createGame">
+          بدء
+        </button>
       </div>
-      <div class="links">
-        <a
-          href="https://nuxtjs.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--green"
-        >
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--grey"
-        >
-          GitHub
-        </a>
+    </section>
+
+    <section v-else class="current-game">
+      <h2 class="text-tertiary">
+        المبارة الحالية
+      </h2>
+      <h4>
+        {{ currentGame[0].name }}
+        {{ currentGame[0].goals }} - {{ currentGame[1].goals }}
+        {{ currentGame[1].name }}
+      </h4>
+
+      <div class="goal">
+        <select id="goalFor" v-model="player" name="goal">
+          <option value="2" disabled>
+            اختر اللاعب
+          </option>
+          <option :value="0">
+            {{ currentGame[0].name }}
+          </option>
+          <option :value="1">
+            {{ currentGame[1].name }}
+          </option>
+        </select>
+
+        <button :disabled="player === 2" @click="addGoal(1)">
+          هدف
+        </button>
+
+        <button :disabled="player === 2 || currentGame[player].goals === 0" @click="addGoal(-1)">
+          إلغاء هدف
+        </button>
       </div>
-    </div>
+
+      <button class="expanded" @click="endGame">
+        انهاء المباراة
+      </button>
+
+      <button class="expanded margin-top danger-button" @click="deleteGame">
+        حذف المباراة بدون حفظ
+      </button>
+    </section>
+
+    <champion-tabls :players="players" :on-line="onLine" />
+
+    <head-to-head :players="players" :on-line="onLine" />
+    <matches-table :matches="matches" :on-line="onLine" :pages="pages" />
+
+    <add-player />
   </div>
 </template>
 
 <script>
+import ChampionTabls from '@/components/ChampionTabls.vue'
+import MatchesTable from '@/components/MatchesTable.vue'
+import HeadToHead from '@/components/HeadToHead.vue'
+import AddPlayer from '@/components/AddPlayer.vue'
 export default {
-  async asyncData ({ $http }) {
-    const test = await $http.$get('/api/test')
+  name: 'App',
+  components: { ChampionTabls, MatchesTable, HeadToHead, AddPlayer },
+  data () {
     return {
-      test
+      player1: 0, // For Starting A new Game
+      player2: 0, // For Starting A new Game
+
+      player: 2, // For Goals
+      players: [], // For table
+      matches: [], // For table
+      currentGame: [], // For Game
+      pages: 0,
+      perPage: 10
+    }
+  },
+  computed: {
+    onLine () {
+      return this.$nuxt.isOnline
+    }
+  },
+  async mounted () {
+    await this.getPlayers()
+    await this.getMatches()
+    const gameInStorage = localStorage.getItem('currentGame')
+    if (gameInStorage) {
+      this.currentGame = JSON.parse(gameInStorage)
+    }
+  },
+  methods: {
+    async getPlayers () {
+      await this.$http.$get('/')
+        .then((res) => {
+          res.forEach((player) => {
+            player.points = (player.win * 3) + player.draw
+            player.vs = {}
+            res.forEach((x) => {
+              if (x.name !== player.name) { player.vs[x.name] = 0 }
+            })
+          })
+          this.players = res.sort((x, y) => y.points - x.points)
+        })
+        .catch(res => alert(res))
+    },
+    async getMatches () {
+      await this.$http.$get('/matches')
+        .then((res) => {
+          this.matches = res
+          this.pages = Math.ceil(res.length / this.perPage)
+          this.matches.forEach((match) => {
+            const player1 = match.player1.name
+            const player2 = match.player2.name
+
+            const player1Record = this.players.find(player => player.name === player1)
+            const player2Record = this.players.find(player => player.name === player2)
+
+            player1Record.vs[player2]++
+            player2Record.vs[player1]++
+          })
+        })
+        .catch(res => alert(res))
+    },
+    createGame () {
+      this.currentGame = [
+        { id: this.players[this.player1]._id, name: this.players[this.player1].name, goals: 0 },
+        { id: this.players[this.player2]._id, name: this.players[this.player2].name, goals: 0 }
+      ]
+      localStorage.setItem('currentGame', JSON.stringify(this.currentGame))
+      this.player1 = 0
+      this.player2 = 0
+    },
+    deleteGame () {
+      this.currentGame = []
+      localStorage.removeItem('currentGame')
+    },
+    addGoal (number) {
+      this.currentGame[this.player].goals += number
+      localStorage.setItem('currentGame', JSON.stringify(this.currentGame))
+    },
+    async endGame () {
+      await this.$http.post('/match', { game: this.currentGame })
+        .then((res) => {
+          localStorage.removeItem('currentGame')
+
+          this.getPlayers()
+          this.getMatches()
+          this.currentGame = []
+        })
+        .catch(res => alert(res))
     }
   }
 }
 </script>
 
-<style scoped>
-.container {
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.title {
-  font-family:
-    'Quicksand',
-    'Source Sans Pro',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.links {
-  padding-top: 15px;
-}
+<style>
 </style>
