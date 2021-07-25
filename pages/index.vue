@@ -71,7 +71,7 @@
     <head-to-head :players="players" :on-line="onLine" />
     <matches-table :matches="matches" :on-line="onLine" :pages="pages" />
 
-    <add-player />
+    <add-player @playerAdded="getPlayers" />
   </div>
 </template>
 

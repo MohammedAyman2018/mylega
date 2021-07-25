@@ -19,19 +19,18 @@
 export default {
   data () {
     return {
-      newPlayerName: '' // For new Players
-
+      newPlayerName: '' // For new Player
     }
   },
   methods: {
-
     async addPlayer () {
-      await this.$http.post({ name: this.newPlayerName })
+      await this.$http.$post('/', { name: this.newPlayerName })
         .then((res) => {
+          this.$emit('playerAdded')
           this.getPlayers()
           this.newPlayerName = ''
         })
-        .catch(res => alert(res))
+        .catch(res => console.log('res', res))
     }
   }
 }
