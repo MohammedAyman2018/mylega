@@ -1,7 +1,9 @@
 <template>
   <div id="app">
     <h1>FIFA 21</h1>
-
+    <button @click="logout">
+      خروج من الدوري
+    </button>
     <section v-if="currentGame.length === 0" class="current-game">
       <h2 class="text-tertiary">
         مباراة جديدة
@@ -142,6 +144,10 @@ export default {
     }
   },
   methods: {
+    logout () {
+      localStorage.removeItem('league')
+      this.$router.push('/login')
+    },
     async updateLocalStorage () {
       const updateLocalStorage = await this.$http.$get(`/leagues/update/${JSON.parse(localStorage.getItem('league'))._id}`)
       localStorage.setItem('league', JSON.stringify(updateLocalStorage))
@@ -231,7 +237,7 @@ export default {
           await this.updateLocalStorage()
           this.currentGame = []
         })
-        .catch(res => alert(res))
+        .catch(res => alert(res.response.data.msg))
     }
   }
 }

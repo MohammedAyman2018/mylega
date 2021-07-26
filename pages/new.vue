@@ -46,7 +46,7 @@ export default {
           alert('تم انشاء الدوري بنجاح! سجل دخول الان')
           this.$router.push('/login')
         })
-        .catch(res => alert(res))
+        .catch(res => alert(res.response.data.msg))
     }
   }
 }

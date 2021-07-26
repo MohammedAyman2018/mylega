@@ -7,12 +7,16 @@ const router = Router()
  * @argument { Stirng } password league password
  */
 router.post('/leagues/login', async (req, res) => {
-  await League.findOne(req.body)
+  const league = await League.findOne(req.body)
     .populate('matches')
     .populate('players')
     .select('password-')
-    .then(league => res.status(200).json(league))
-    .catch(err => res.status(400).json({ msg: err }))
+
+  if (league) {
+    return res.status(200).json(league)
+  } else {
+    return res.status(400).json({ msg: 'برجاء التأكد من البيانات' })
+  }
 })
 
 /**

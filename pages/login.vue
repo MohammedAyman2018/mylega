@@ -46,7 +46,7 @@ export default {
           localStorage.setItem('league', JSON.stringify(res))
           this.$router.push('/')
         })
-        .catch(res => alert(res))
+        .catch(res => alert(res.response.data.msg))
     }
   }
 }
