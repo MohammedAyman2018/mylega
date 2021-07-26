@@ -12,6 +12,19 @@ h1, h2, h3, h4, h5, h6 {
 .text-tertiary {
   color: #2cb67d !important;
 }
+
+
+/* Start Form Styles */
+.form-control {
+  margin-bottom: 10px
+}
+.form-control label {
+  display: block;
+  color: white
+}
+.form-control input {
+  padding: 10px
+}
 select, button {
   border: 0;
   cursor: pointer;

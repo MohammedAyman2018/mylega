@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const { Player } = require('../models/player')
 const { Match } = require('../models/match')
+const { League } = require('../models/leagues')
 
 const router = Router()
 
@@ -11,7 +12,10 @@ router.post('/matches', async (req, res) => {
   const player1FromDb = await Player.findById(player1.id)
   const player2FromDb = await Player.findById(player2.id)
 
-  await Match.create({ player1, player2 })
+  const match = await Match.create({ player1, player2 })
+  const league = await League.findOne({ _id: req.body.leagueId })
+  league.matches.push(match._id)
+  await league.save()
 
   player1FromDb.matches++
   player1FromDb.hisGoals += player1.goals

@@ -30,8 +30,10 @@ app.use(express.urlencoded({ extended: true }))
 
 const playersRoute = require('./routes/players')
 const matchesRoute = require('./routes/matches')
+const leaguesRoute = require('./routes/leagues')
 app.use(playersRoute)
 app.use(matchesRoute)
+app.use(leaguesRoute)
 
 // Export express app
 module.exports = app

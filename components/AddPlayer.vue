@@ -24,7 +24,7 @@ export default {
   },
   methods: {
     async addPlayer () {
-      await this.$http.$post('/players', { name: this.newPlayerName })
+      await this.$http.$post('/players', { name: this.newPlayerName, leagueId: JSON.parse(localStorage.getItem('league'))._id })
         .then((res) => {
           this.$emit('playerAdded')
           this.newPlayerName = ''

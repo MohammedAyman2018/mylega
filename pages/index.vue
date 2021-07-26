@@ -97,7 +97,7 @@
     <head-to-head :players="players" :on-line="onLine" />
     <matches-table :matches="matches" :on-line="onLine" :pages="pages" @getThem="getData" />
 
-    <add-player @playerAdded="getPlayers" />
+    <add-player @playerAdded="updateLocalStorage" />
   </div>
 </template>
 
@@ -128,17 +128,30 @@ export default {
       return this.$nuxt.isOnline
     }
   },
-  async mounted () {
-    await this.getData()
+  async beforeMount () {
+    if (!localStorage.getItem('league')) {
+      this.$router.push('/login')
+    } else {
+      await this.updateLocalStorage()
+    }
+  },
+  mounted () {
     const gameInStorage = localStorage.getItem('currentGame')
     if (gameInStorage) {
       this.currentGame = JSON.parse(gameInStorage)
     }
   },
   methods: {
-    async getData () {
-      await this.getPlayers()
-      await this.getMatches()
+    async updateLocalStorage () {
+      const updateLocalStorage = await this.$http.$get(`/leagues/update/${JSON.parse(localStorage.getItem('league'))._id}`)
+      localStorage.setItem('league', JSON.stringify(updateLocalStorage))
+      const league = JSON.parse(localStorage.getItem('league'))
+      this.getData(league)
+    },
+    getData (league) {
+      const newLeague = JSON.parse(JSON.stringify(league))
+      this.getPlayers(newLeague.players)
+      this.getMatches(newLeague.matches)
       this.facetoface = this.testing()
     },
     testing () {
@@ -170,37 +183,29 @@ export default {
 
       return obj
     },
-    async getPlayers () {
-      await this.$http.$get('/players')
-        .then((res) => {
-          res.forEach((player) => {
-            player.points = (player.win * 3) + player.draw
-            player.vs = {}
-            res.forEach((x) => {
-              if (x.name !== player.name) { player.vs[x.name] = 0 }
-            })
-          })
-          this.players = res.sort((x, y) => y.points - x.points)
+    getPlayers (players) {
+      players.forEach((player) => {
+        player.points = (player.win * 3) + player.draw
+        player.vs = {}
+        players.forEach((x) => {
+          if (x.name !== player.name) { player.vs[x.name] = 0 }
         })
-        .catch(res => alert(res))
+      })
+      this.players = players.sort((x, y) => y.points - x.points)
     },
-    async getMatches () {
-      await this.$http.$get('/matches')
-        .then((res) => {
-          this.matches = res
-          this.pages = Math.ceil(res.length / this.perPage)
-          this.matches.forEach((match) => {
-            const player1 = match.player1.name
-            const player2 = match.player2.name
+    getMatches (matches) {
+      this.matches = matches
+      this.pages = Math.ceil(matches.length / this.perPage)
+      this.matches.forEach((match) => {
+        const player1 = match.player1.name
+        const player2 = match.player2.name
 
-            const player1Record = this.players.find(player => player.name === player1)
-            const player2Record = this.players.find(player => player.name === player2)
+        const player1Record = this.players.find(player => player.name === player1)
+        const player2Record = this.players.find(player => player.name === player2)
 
-            player1Record.vs[player2]++
-            player2Record.vs[player1]++
-          })
-        })
-        .catch(res => alert(res))
+        player1Record.vs[player2]++
+        player2Record.vs[player1]++
+      })
     },
     createGame () {
       this.currentGame = [
@@ -220,12 +225,10 @@ export default {
       localStorage.setItem('currentGame', JSON.stringify(this.currentGame))
     },
     async endGame () {
-      await this.$http.post('/matches', { game: this.currentGame })
-        .then((res) => {
+      await this.$http.post('/matches', { game: this.currentGame, leagueId: JSON.parse(localStorage.getItem('league'))._id })
+        .then(async (res) => {
           localStorage.removeItem('currentGame')
-
-          this.getPlayers()
-          this.getMatches()
+          await this.updateLocalStorage()
           this.currentGame = []
         })
         .catch(res => alert(res))
