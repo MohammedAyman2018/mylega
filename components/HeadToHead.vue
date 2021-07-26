@@ -3,7 +3,7 @@
     <!-- مين لاعب مين قد ايه -->
     <section>
       <h2 class="text-tertiary">
-        المواجهات المباشرة
+        عدد مرات المواجهة
       </h2>
 
       <table v-if="onLine">

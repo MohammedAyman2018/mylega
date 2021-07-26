@@ -64,7 +64,7 @@ export default {
   ],
   http: {
     // HTTP options here
-    baseURL: '/api/players'
+    baseURL: '/api/'
   },
 
   /*

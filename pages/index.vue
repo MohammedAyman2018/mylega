@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <h1>FIFA 21</h1>
+
     <section v-if="currentGame.length === 0" class="current-game">
       <h2 class="text-tertiary">
         مباراة جديدة
@@ -68,8 +69,33 @@
 
     <champion-tabls :players="players" :on-line="onLine" />
 
+    <h2 class="text-tertiary">
+      المواجهات المباشرة
+    </h2>
+    <div class="cards">
+      <div v-for="(player21, key) in facetoface" :key="key" class="card">
+        <p class="text-tertiary">
+          {{ key }}
+        </p>
+        <table>
+          <tr>
+            <td v-for="(name, key32) in player21" :key="key32">
+              {{ key32 }}
+            </td>
+          </tr>
+          <tr>
+            <td v-for="(name, key32) in player21" :key="key32">
+              <p>كسبه: {{ name.lose }}</p>
+              <p>خسر منه: {{ name.win }}</p>
+              <p>تعادل: {{ name.draw }}</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
     <head-to-head :players="players" :on-line="onLine" />
-    <matches-table :matches="matches" :on-line="onLine" :pages="pages" />
+    <matches-table :matches="matches" :on-line="onLine" :pages="pages" @getThem="getData" />
 
     <add-player @playerAdded="getPlayers" />
   </div>
@@ -78,11 +104,11 @@
 <script>
 import ChampionTabls from '@/components/ChampionTabls.vue'
 import MatchesTable from '@/components/MatchesTable.vue'
-import HeadToHead from '@/components/HeadToHead.vue'
+// import HeadToHead from '@/components/HeadToHead.vue'
 import AddPlayer from '@/components/AddPlayer.vue'
 export default {
   name: 'App',
-  components: { ChampionTabls, MatchesTable, HeadToHead, AddPlayer },
+  components: { ChampionTabls, MatchesTable, AddPlayer },
   data () {
     return {
       player1: 0, // For Starting A new Game
@@ -92,6 +118,7 @@ export default {
       players: [], // For table
       matches: [], // For table
       currentGame: [], // For Game
+      facetoface: null,
       pages: 0,
       perPage: 10
     }
@@ -102,16 +129,49 @@ export default {
     }
   },
   async mounted () {
-    await this.getPlayers()
-    await this.getMatches()
+    await this.getData()
     const gameInStorage = localStorage.getItem('currentGame')
     if (gameInStorage) {
       this.currentGame = JSON.parse(gameInStorage)
     }
   },
   methods: {
+    async getData () {
+      await this.getPlayers()
+      await this.getMatches()
+      this.facetoface = this.testing()
+    },
+    testing () {
+      const obj = {}
+      this.players.forEach((player, index) => {
+        obj[player.name] = {}
+        const playersClone = [...this.players].map(y => y.name)
+        playersClone.splice(playersClone.findIndex(x => x === player.name), 1)
+        playersClone.forEach((restPlayer) => {
+          obj[player.name][restPlayer] = { win: 0, lose: 0, draw: 0 }
+        })
+      })
+
+      this.matches.forEach((match) => {
+        const player1 = match.player1.name
+        const player2 = match.player2.name
+
+        if (match.player1.goals > match.player2.goals) {
+          obj[player1][player2].win++
+          obj[player2][player1].lose++
+        } else if (match.player1.goals < match.player2.goals) {
+          obj[player1][player2].lose++
+          obj[player2][player1].win++
+        } else {
+          obj[player1][player2].draw++
+          obj[player2][player1].draw++
+        }
+      })
+
+      return obj
+    },
     async getPlayers () {
-      await this.$http.$get('/')
+      await this.$http.$get('/players')
         .then((res) => {
           res.forEach((player) => {
             player.points = (player.win * 3) + player.draw
@@ -160,7 +220,7 @@ export default {
       localStorage.setItem('currentGame', JSON.stringify(this.currentGame))
     },
     async endGame () {
-      await this.$http.post('/match', { game: this.currentGame })
+      await this.$http.post('/matches', { game: this.currentGame })
         .then((res) => {
           localStorage.removeItem('currentGame')
 
@@ -175,4 +235,15 @@ export default {
 </script>
 
 <style>
+.cards {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  align-content: space-around;
+}
+
+.card table td{
+  padding: 10px
+}
 </style>

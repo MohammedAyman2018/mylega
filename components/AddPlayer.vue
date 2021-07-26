@@ -24,13 +24,12 @@ export default {
   },
   methods: {
     async addPlayer () {
-      await this.$http.$post('/', { name: this.newPlayerName })
+      await this.$http.$post('/players', { name: this.newPlayerName })
         .then((res) => {
           this.$emit('playerAdded')
-          this.getPlayers()
           this.newPlayerName = ''
         })
-        .catch(res => console.log('res', res))
+        .catch(res => alert(res))
     }
   }
 }
