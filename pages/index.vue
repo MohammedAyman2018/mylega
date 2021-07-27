@@ -1,105 +1,127 @@
 <template>
   <div id="app">
     <h1>FIFA 21</h1>
-    <button @click="logout">
-      خروج من الدوري
-    </button>
-    <section v-if="currentGame.length === 0" class="current-game">
-      <h2 class="text-tertiary">
-        مباراة جديدة
-      </h2>
 
-      <div class="goal">
-        <select id="player1" v-model="player1" name="player1">
-          <option v-for="(theplayer, idx) in players" :key="theplayer._id" :value="idx">
-            {{ theplayer.name }}
-          </option>
-        </select>
-
-        <select id="player2" v-model="player2" name="player2">
-          <option v-for="(theplayer2, idx) in players" :key="theplayer2._id" :value="idx">
-            {{ theplayer2.name }}
-          </option>
-        </select>
-
-        <button :disabled="player1 === player2" @click="createGame">
-          بدء
-        </button>
-      </div>
-    </section>
-
-    <section v-else class="current-game">
-      <h2 class="text-tertiary">
-        المبارة الحالية
-      </h2>
-      <h4>
-        {{ currentGame[0].name }}
-        {{ currentGame[0].goals }} - {{ currentGame[1].goals }}
-        {{ currentGame[1].name }}
-      </h4>
-
-      <div class="goal">
-        <select id="goalFor" v-model="player" name="goal">
-          <option value="2" disabled>
-            اختر اللاعب
-          </option>
-          <option :value="0">
-            {{ currentGame[0].name }}
-          </option>
-          <option :value="1">
-            {{ currentGame[1].name }}
-          </option>
-        </select>
-
-        <button :disabled="player === 2" @click="addGoal(1)">
-          هدف
-        </button>
-
-        <button :disabled="player === 2 || currentGame[player].goals === 0" @click="addGoal(-1)">
-          إلغاء هدف
-        </button>
-      </div>
-
-      <button class="expanded" @click="endGame">
-        انهاء المباراة
+    <div class="margin-top">
+      <button @click="logout">
+        خروج من الدوري
       </button>
-
-      <button class="expanded margin-top danger-button" @click="deleteGame">
-        حذف المباراة بدون حفظ
-      </button>
-    </section>
-
-    <champion-tabls :players="players" :on-line="onLine" />
-
-    <h2 class="text-tertiary">
-      المواجهات المباشرة
-    </h2>
-    <div class="cards">
-      <div v-for="(player21, key) in facetoface" :key="key" class="card">
-        <p class="text-tertiary">
-          {{ key }}
-        </p>
-        <table>
-          <tr>
-            <td v-for="(name, key32) in player21" :key="key32">
-              {{ key32 }}
-            </td>
-          </tr>
-          <tr>
-            <td v-for="(name, key32) in player21" :key="key32">
-              <p>كسبه: {{ name.lose }}</p>
-              <p>خسر منه: {{ name.win }}</p>
-              <p>تعادل: {{ name.draw }}</p>
-            </td>
-          </tr>
-        </table>
-      </div>
     </div>
 
-    <head-to-head :players="players" :on-line="onLine" />
-    <matches-table :matches="matches" :on-line="onLine" :pages="pages" @getThem="getData" />
+    <div v-if="winner && winner.name" class="margin-top">
+      <img width="160px" src="@/assets/trophy.png" alt="trophy">
+      <h2 class="text-tertiary">
+        الفائز: {{ winner.name }}
+      </h2>
+    </div>
 
-    <add-player @playerAdded="updateLocalStorage" />
+    <div class="margin-top">
+      <div v-if="!winner">
+        <section v-if="currentGame.length === 0" class="current-game">
+          <h2 class="text-tertiary">
+            مباراة جديدة
+          </h2>
+
+          <div class="goal">
+            <select id="player1" v-model="player1" name="player1">
+              <option v-for="(theplayer, idx) in players" :key="theplayer._id" :value="idx">
+                {{ theplayer.name }}
+              </option>
+            </select>
+
+            <select id="player2" v-model="player2" name="player2">
+              <option v-for="(theplayer2, idx) in players" :key="theplayer2._id" :value="idx">
+                {{ theplayer2.name }}
+              </option>
+            </select>
+
+            <button :disabled="player1 === player2" @click="createGame">
+              بدء
+            </button>
+          </div>
+        </section>
+
+        <section v-else class="current-game">
+          <h2 class="text-tertiary">
+            المبارة الحالية
+          </h2>
+          <h4>
+            {{ currentGame[0].name }}
+            {{ currentGame[0].goals }} - {{ currentGame[1].goals }}
+            {{ currentGame[1].name }}
+          </h4>
+
+          <div class="goal">
+            <select id="goalFor" v-model="player" name="goal">
+              <option value="2" disabled>
+                اختر اللاعب
+              </option>
+              <option :value="0">
+                {{ currentGame[0].name }}
+              </option>
+              <option :value="1">
+                {{ currentGame[1].name }}
+              </option>
+            </select>
+
+            <button :disabled="player === 2" @click="addGoal(1)">
+              هدف
+            </button>
+
+            <button :disabled="player === 2 || currentGame[player].goals === 0" @click="addGoal(-1)">
+              إلغاء هدف
+            </button>
+          </div>
+
+          <button class="expanded" @click="endGame">
+            انهاء المباراة
+          </button>
+
+          <button class="expanded margin-top danger-button" @click="deleteGame">
+            حذف المباراة بدون حفظ
+          </button>
+        </section>
+      </div>
+
+      <champion-tabls :players="players" :on-line="onLine" />
+
+      <h2 class="text-tertiary">
+        المواجهات المباشرة
+      </h2>
+      <div class="cards">
+        <div v-for="(player21, key) in facetoface" :key="key" class="card">
+          <p class="text-tertiary">
+            {{ key }}
+          </p>
+          <table>
+            <tr>
+              <td v-for="(name, key32) in player21" :key="key32">
+                {{ key32 }}
+              </td>
+            </tr>
+            <tr>
+              <td v-for="(name, key32) in player21" :key="key32">
+                <p>كسبه: {{ name.lose }}</p>
+                <p>خسر منه: {{ name.win }}</p>
+                <p>تعادل: {{ name.draw }}</p>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <head-to-head :players="players" :on-line="onLine" />
+      <matches-table :matches="matches" :on-line="onLine" :pages="pages" @getThem="getData" />
+      <div v-if="!winner" class="margin-top">
+        <add-player @playerAdded="updateLocalStorage" />
+        <button class="danger-button margin-top" @click="endLeague(true)">
+          انهاء الدوري
+        </button>
+      </div>
+      <button v-if="winner" class="danger-button margin-top" @click="endLeague(false)">
+        إكمال الدوري
+      </button>
+    </div>
   </div>
 </template>
 
@@ -122,6 +144,7 @@ export default {
       currentGame: [], // For Game
       facetoface: null,
       pages: 0,
+      winner: null,
       perPage: 10
     }
   },
@@ -159,6 +182,7 @@ export default {
       this.getPlayers(newLeague.players)
       this.getMatches(newLeague.matches)
       this.facetoface = this.testing()
+      this.winner = newLeague.winner
     },
     testing () {
       const obj = {}
@@ -236,6 +260,23 @@ export default {
           localStorage.removeItem('currentGame')
           await this.updateLocalStorage()
           this.currentGame = []
+        })
+        .catch(res => alert(res.response.data.msg))
+    },
+    async endLeague (end) {
+      let mostPoints = null
+      if (end) {
+        mostPoints = this.players[0]
+        this.players.forEach((player) => {
+          if (player.points > mostPoints.points) {
+            mostPoints = player._id
+          }
+        })
+      }
+
+      await this.$http.post('/leagues/end', { playerId: mostPoints, leagueId: JSON.parse(localStorage.getItem('league'))._id })
+        .then(async (res) => {
+          await this.updateLocalStorage()
         })
         .catch(res => alert(res.response.data.msg))
     }
