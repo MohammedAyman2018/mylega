@@ -39,6 +39,12 @@ export default {
       }
     }
   },
+  mounted () {
+    const leagueInStorage = localStorage.getItem('league')
+    if (leagueInStorage) {
+      this.$router.push('/')
+    }
+  },
   methods: {
     login () {
       this.$http.$post('/leagues/login', this.league)
